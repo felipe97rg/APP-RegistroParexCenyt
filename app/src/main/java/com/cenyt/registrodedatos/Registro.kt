@@ -6,13 +6,15 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "registros")
 data class Registro(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val nombre: String,
-    val turno: String,
-    val ubicacion: String,
+    val fechaHora: String,
+    val nombreResponsable: String,
+    val area: String,
+    val circuito: String,
+    val estructuraNumero: String,
+    val latitud: String?,
+    val longitud: String?,
     val observaciones: String,
-    val latitud: String? = null,
-    val longitud: String? = null,
-    val fotoPath: String? = null
-
+    val fotoPath: String?
 )
+
 

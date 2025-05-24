@@ -20,6 +20,12 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+
+import coil.compose.rememberAsyncImagePainter
+import android.net.Uri
+
 
 class RegistroListActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,20 +78,37 @@ fun RegistroListScreen(registros: List<Registro>, onVolver: () -> Unit) {
 
 
 
+
+
 @Composable
 fun RegistroItem(registro: Registro) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = "Nombre: ${registro.nombre}")
-            Text(text = "Turno: ${registro.turno}")
-            Text(text = "Ubicación: ${registro.ubicacion}")
-            Text(text = "Observaciones: ${registro.observaciones}")
+
+            // DATOS DEL SITIO
+            Text("DATOS DEL SITIO", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text("Fecha y hora: ${registro.fechaHora}")
+            Text("Nombre: ${registro.nombreResponsable}")
+            Text("Área: ${registro.area}")
+            Text("Circuito: ${registro.circuito}")
+            Text("Estructura número: ${registro.estructuraNumero}")
             registro.latitud?.let { Text("Latitud: $it") }
             registro.longitud?.let { Text("Longitud: $it") }
+            Text("Observaciones: ${registro.observaciones}")
 
-            registro.fotoPath?.let {
-                val imageBitmap = remember(it) {
-                    BitmapFactory.decodeFile(it)?.asImageBitmap()
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // ESTADO DE LOS ELEMENTOS
+            Text("ESTADO DE LOS ELEMENTOS", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+
+            registro.fotoPath?.let { path ->
+                val imageBitmap = remember(path) {
+                    try {
+                        BitmapFactory.decodeFile(path)?.asImageBitmap()
+                    } catch (e: Exception) {
+                        null
+                    }
                 }
                 imageBitmap?.let { img ->
                     Image(
@@ -93,8 +116,7 @@ fun RegistroItem(registro: Registro) {
                         contentDescription = "Imagen adjunta",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp)
-                            .padding(top = 8.dp),
+                            .height(200.dp),
                         contentScale = ContentScale.Crop
                     )
                 }
@@ -102,5 +124,4 @@ fun RegistroItem(registro: Registro) {
         }
     }
 }
-
 

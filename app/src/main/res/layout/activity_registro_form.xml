@@ -9,6 +9,22 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <!-- 🟦 SECCIÓN: DATOS DEL SITIO -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="DATOS DEL SITIO"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:paddingBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tvFechaHora"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Fecha y hora"
+            android:paddingBottom="8dp" />
+
         <EditText
             android:id="@+id/etNombre"
             android:layout_width="match_parent"
@@ -16,39 +32,22 @@
             android:hint="Nombre del operador" />
 
         <EditText
-            android:id="@+id/etUbicacion"
+            android:id="@+id/etArea"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Ubicación" />
-
-        <Spinner
-            android:id="@+id/spinnerTurno"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:hint="Área" />
 
         <EditText
-            android:id="@+id/etObservaciones"
+            android:id="@+id/etCircuito"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Observaciones"
-            android:minLines="3"
-            android:gravity="top"
-            android:inputType="textMultiLine" />
+            android:hint="Circuito" />
 
-        <ImageView
-            android:id="@+id/imagePreview"
+        <EditText
+            android:id="@+id/etEstructura"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:scaleType="centerCrop"
-            android:contentDescription="Imagen adjunta"
-            android:visibility="gone" />
-
-        <Button
-            android:id="@+id/btnAdjuntarFoto"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="📷 Adjuntar Foto" />
-
+            android:hint="Estructura número" />
 
         <EditText
             android:id="@+id/etLatitud"
@@ -70,11 +69,46 @@
             android:layout_height="wrap_content"
             android:text="📍 Obtener ubicación" />
 
+        <EditText
+            android:id="@+id/etObservaciones"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Observaciones"
+            android:minLines="3"
+            android:gravity="top"
+            android:inputType="textMultiLine" />
 
+        <!-- 🟩 SECCIÓN: ESTADO DE LOS ELEMENTOS -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="ESTADO DE LOS ELEMENTOS"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:paddingTop="16dp"
+            android:paddingBottom="8dp" />
+
+        <ImageView
+            android:id="@+id/imagePreview"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:scaleType="centerCrop"
+            android:contentDescription="Imagen adjunta"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btnAdjuntarFoto"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📷 Adjuntar Foto" />
+
+        <!-- BOTÓN FINAL -->
         <Button
             android:id="@+id/btnGuardar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Guardar" />
+            android:text="Guardar"
+            android:layout_marginTop="16dp" />
+
     </LinearLayout>
 </ScrollView>
