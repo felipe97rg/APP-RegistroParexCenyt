@@ -41,8 +41,6 @@ class RegistroFormActivity : AppCompatActivity() {
         fechaHoraActual = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())
         tvFechaHora.text = "Fecha y hora: $fechaHoraActual"
 
-
-
         btnFoto.setOnClickListener {
             val opciones = arrayOf("Tomar Foto", "Elegir desde Galería")
             AlertDialog.Builder(this)
@@ -55,7 +53,6 @@ class RegistroFormActivity : AppCompatActivity() {
                 }.show()
         }
 
-        // UBICACIÓN
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         val etLatitud = findViewById<EditText>(R.id.etLatitud)
         val etLongitud = findViewById<EditText>(R.id.etLongitud)
@@ -76,8 +73,6 @@ class RegistroFormActivity : AppCompatActivity() {
             }
         }
 
-
-        // GUARDAR
         findViewById<Button>(R.id.btnGuardar).setOnClickListener {
             guardarRegistro()
         }
@@ -88,7 +83,6 @@ class RegistroFormActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), 101)
             return
         }
-
         val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         val photoFile = createImageFile()
         val photoURI = FileProvider.getUriForFile(this, "${applicationContext.packageName}.provider", photoFile)
@@ -110,32 +104,49 @@ class RegistroFormActivity : AppCompatActivity() {
     }
 
     private fun guardarRegistro() {
-        val fechaHora = fechaHoraActual // desde arriba
-        val area = findViewById<EditText>(R.id.etArea).text.toString()
-        val circuito = findViewById<EditText>(R.id.etCircuito).text.toString()
-        val estructura = findViewById<EditText>(R.id.etEstructura).text.toString()
-        val nombreResponsable = findViewById<EditText>(R.id.etNombre).text.toString()
-        val observaciones = findViewById<EditText>(R.id.etObservaciones).text.toString()
-        val latitud = findViewById<EditText>(R.id.etLatitud).text.toString()
-        val longitud = findViewById<EditText>(R.id.etLongitud).text.toString()
-
-        if (nombreResponsable.isBlank()) {
-            Toast.makeText(this, "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
-            return
-        }
+        val getText = { id: Int -> findViewById<EditText>(id).text.toString() }
+        val getInt = { id: Int -> getText(id).toIntOrNull() }
+        val getCheck = { id: Int -> findViewById<CheckBox>(id).isChecked }
 
         val nuevoRegistro = Registro(
             fechaHora = fechaHoraActual,
-            nombreResponsable = findViewById<EditText>(R.id.etNombre).text.toString(),
-            area = findViewById<EditText>(R.id.etArea).text.toString(),
-            circuito = findViewById<EditText>(R.id.etCircuito).text.toString(),
-            estructuraNumero = findViewById<EditText>(R.id.etEstructura).text.toString(),
-            latitud = findViewById<EditText>(R.id.etLatitud).text.toString(),
-            longitud = findViewById<EditText>(R.id.etLongitud).text.toString(),
-            observaciones = findViewById<EditText>(R.id.etObservaciones).text.toString(),
+            nombreResponsable = getText(R.id.etNombre),
+            area = getText(R.id.etArea),
+            circuito = getText(R.id.etCircuito),
+            estructuraNumero = getText(R.id.etEstructura),
+            latitud = getText(R.id.etLatitud),
+            longitud = getText(R.id.etLongitud),
+            observaciones = getText(R.id.etObservaciones),
+            apoyoTipo = getText(R.id.etApoyoTipo),
+            apoyoCantidad = getInt(R.id.etApoyoCantidad),
+            tipoNorma = getText(R.id.etTipoNorma),
+            distancia = getInt(R.id.etDistancia),
+            resistencia = getInt(R.id.etResistencia),
+            avifaunaEstructura = getCheck(R.id.checkAvifaunaEstructura),
+            crucetaSuperior = getInt(R.id.etCrucetaSuperior),
+            crucetaInferiorTipo = getText(R.id.etCrucetaInferiorTipo),
+            bayonetaIzquierda = getInt(R.id.etBayonetaIzquierda),
+            bayonetaDerecha = getInt(R.id.etBayonetaDerecha),
+            templeteCantidad = getInt(R.id.etTempleteCantidad),
+            templeteAvifauna = getInt(R.id.etTempleteAvifauna),
+            aisladorTipo = getText(R.id.etAisladorTipo),
+            aisladorA = getInt(R.id.etAisladorA),
+            aisladorB = getInt(R.id.etAisladorB),
+            aisladorC = getInt(R.id.etAisladorC),
+            dpsA = getInt(R.id.etDpsA),
+            dpsB = getInt(R.id.etDpsB),
+            dpsC = getInt(R.id.etDpsC),
+            seccionador = getCheck(R.id.checkSeccionador),
+            amortiguadorAtras = getInt(R.id.etAmortiguadorAtras),
+            amortiguadorAdelante = getInt(R.id.etAmortiguadorAdelante),
+            sptBajante = getInt(R.id.etSptBajante),
+            sptConexion = getInt(R.id.etSptConexion),
+            sptCantidad = getInt(R.id.etSptSpt),
+            sptEstado = getInt(R.id.etSptEstado),
+            medicionR = getCheck(R.id.checkMedicionR),
+            medicionP = getCheck(R.id.checkMedicionP),
             fotoPath = currentPhotoPath
         )
-
 
         CoroutineScope(Dispatchers.IO).launch {
             db.registroDao().insertar(nuevoRegistro)
@@ -148,34 +159,31 @@ class RegistroFormActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-
         val imageView = findViewById<ImageView>(R.id.imagePreview)
-
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             imageView.setImageURI(Uri.fromFile(File(currentPhotoPath)))
             imageView.visibility = View.VISIBLE
         }
-
         if (requestCode == REQUEST_IMAGE_GALLERY && resultCode == RESULT_OK && data != null) {
             val selectedImageUri = data.data
             selectedImageUri?.let { uri ->
-                val imageView = findViewById<ImageView>(R.id.imagePreview)
-
-                // Copiar la imagen a tu carpeta de fotos internas
                 val inputStream = contentResolver.openInputStream(uri)
                 val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
                 val file = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "IMG_${timeStamp}.jpg")
-                val outputStream = file.outputStream()
-
-                inputStream?.copyTo(outputStream)
+                inputStream?.copyTo(file.outputStream())
                 inputStream?.close()
-                outputStream.close()
-
                 currentPhotoPath = file.absolutePath
                 imageView.setImageURI(Uri.fromFile(file))
                 imageView.visibility = View.VISIBLE
             }
         }
+    }
 
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 101 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) abrirCamara()
+        if (requestCode == 100 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "Permiso de ubicación concedido", Toast.LENGTH_SHORT).show()
+        }
     }
 }

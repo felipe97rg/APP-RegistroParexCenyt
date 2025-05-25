@@ -19,13 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-
 import coil.compose.rememberAsyncImagePainter
 import android.net.Uri
-
 
 class RegistroListActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,13 +34,12 @@ class RegistroListActivity : ComponentActivity() {
             val registros = db.registroDao().obtenerTodos()
             setContent {
                 RegistroListScreen(registros = registros) {
-                    finish() // 🔙 Esto cierra la pantalla y vuelve a MainActivity
+                    finish()
                 }
             }
         }
     }
 }
-
 
 @Composable
 fun RegistroListScreen(registros: List<Registro>, onVolver: () -> Unit) {
@@ -53,8 +49,6 @@ fun RegistroListScreen(registros: List<Registro>, onVolver: () -> Unit) {
             .padding(16.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-
-        // Lista de registros
         LazyColumn(
             modifier = Modifier.weight(1f)
         ) {
@@ -64,7 +58,6 @@ fun RegistroListScreen(registros: List<Registro>, onVolver: () -> Unit) {
             }
         }
 
-        // Botón de volver al final
         Button(
             onClick = onVolver,
             modifier = Modifier
@@ -76,16 +69,11 @@ fun RegistroListScreen(registros: List<Registro>, onVolver: () -> Unit) {
     }
 }
 
-
-
-
-
 @Composable
 fun RegistroItem(registro: Registro) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
 
-            // DATOS DEL SITIO
             Text("DATOS DEL SITIO", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Spacer(modifier = Modifier.height(4.dp))
             Text("Fecha y hora: ${registro.fechaHora}")
@@ -98,9 +86,44 @@ fun RegistroItem(registro: Registro) {
             Text("Observaciones: ${registro.observaciones}")
 
             Spacer(modifier = Modifier.height(12.dp))
-
-            // ESTADO DE LOS ELEMENTOS
             Text("ESTADO DE LOS ELEMENTOS", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+
+            Text("Apoyo Tipo: ${registro.apoyoTipo ?: "-"}")
+            Text("Apoyo Cantidad: ${registro.apoyoCantidad ?: "-"}")
+            Text("Tipo norma: ${registro.tipoNorma ?: "-"}")
+            Text("Distancia: ${registro.distancia ?: "-"}")
+            Text("Resistencia: ${registro.resistencia ?: "-"}")
+            Text("Avifauna: ${if (registro.avifaunaEstructura) "Sí" else "No"}")
+
+            Text("Cruceta superior: ${registro.crucetaSuperior ?: "-"}")
+            Text("Cruceta inferior tipo: ${registro.crucetaInferiorTipo ?: "-"}")
+
+            Text("Bayoneta izquierda: ${registro.bayonetaIzquierda ?: "-"}")
+            Text("Bayoneta derecha: ${registro.bayonetaDerecha ?: "-"}")
+
+            Text("Templete cantidad: ${registro.templeteCantidad ?: "-"}")
+            Text("Templete avifauna: ${registro.templeteAvifauna ?: "-"}")
+
+            Text("Aislador tipo: ${registro.aisladorTipo ?: "-"}")
+            Text("Aislador A: ${registro.aisladorA ?: "-"}")
+            Text("Aislador B: ${registro.aisladorB ?: "-"}")
+            Text("Aislador C: ${registro.aisladorC ?: "-"}")
+
+            Text("DPS A: ${registro.dpsA ?: "-"}")
+            Text("DPS B: ${registro.dpsB ?: "-"}")
+            Text("DPS C: ${registro.dpsC ?: "-"}")
+
+            Text("Seccionador/Cortacircuito: ${if (registro.seccionador) "Sí" else "No"}")
+
+            Text("Amortiguador atrás: ${registro.amortiguadorAtras ?: "-"}")
+            Text("Amortiguador adelante: ${registro.amortiguadorAdelante ?: "-"}")
+
+            Text("SPT Bajante: ${registro.sptBajante ?: "-"}")
+            Text("SPT Conexión: ${registro.sptConexion ?: "-"}")
+            Text("SPT: ${registro.sptCantidad ?: "-"}")
+            Text("SPT Estado: ${registro.sptEstado ?: "-"}")
+            Text("Medición R: ${if (registro.medicionR) "Sí" else "No"}")
+            Text("Medición P: ${if (registro.medicionP) "Sí" else "No"}")
 
             registro.fotoPath?.let { path ->
                 val imageBitmap = remember(path) {
@@ -124,4 +147,3 @@ fun RegistroItem(registro: Registro) {
         }
     }
 }
-

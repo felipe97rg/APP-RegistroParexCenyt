@@ -25,69 +25,281 @@
             android:text="Fecha y hora"
             android:paddingBottom="8dp" />
 
-        <EditText
-            android:id="@+id/etNombre"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Nombre del operador" />
-
-        <EditText
-            android:id="@+id/etArea"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Área" />
-
-        <EditText
-            android:id="@+id/etCircuito"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Circuito" />
-
-        <EditText
-            android:id="@+id/etEstructura"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Estructura número" />
-
-        <EditText
-            android:id="@+id/etLatitud"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Latitud"
-            android:enabled="false" />
-
-        <EditText
-            android:id="@+id/etLongitud"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Longitud"
-            android:enabled="false" />
-
+        <EditText android:id="@+id/etNombre" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Nombre del operador" />
+        <EditText android:id="@+id/etArea" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Área" />
+        <EditText android:id="@+id/etCircuito" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Circuito" />
+        <EditText android:id="@+id/etEstructura" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Estructura número" />
+        <EditText android:id="@+id/etLatitud" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Latitud" android:enabled="false" />
+        <EditText android:id="@+id/etLongitud" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Longitud" android:enabled="false" />
         <Button
             android:id="@+id/btnUbicacion"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="📍 Obtener ubicación" />
-
-        <EditText
-            android:id="@+id/etObservaciones"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Observaciones"
-            android:minLines="3"
-            android:gravity="top"
-            android:inputType="textMultiLine" />
+            android:text="📍 Obtener ubicación"
+            android:backgroundTint= "#1e51ff"
+            android:textColor="#ffffff"
+            />
+        <EditText android:id="@+id/etObservaciones" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Observaciones" android:minLines="3" android:gravity="top" android:inputType="textMultiLine" />
 
         <!-- 🟩 SECCIÓN: ESTADO DE LOS ELEMENTOS -->
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ESTADO DE LOS ELEMENTOS" android:textStyle="bold" android:textSize="18sp" android:paddingTop="16dp" android:paddingBottom="8dp" />
+
+        <!-- ESTRUCTURA -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="ESTADO DE LOS ELEMENTOS"
-            android:textStyle="bold"
-            android:textSize="18sp"
-            android:paddingTop="16dp"
-            android:paddingBottom="8dp" />
+            android:text="Estructura"
+            android:textStyle="bold" />
 
+        <EditText
+            android:id="@+id/etApoyoTipo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Apoyo (P/T/T) - Tipo"
+            android:inputType="text" />
+
+        <EditText
+            android:id="@+id/etApoyoCantidad"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Apoyo (P/T/T) - Cantidad"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/etTipoNorma"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Tipo (cod norma)"
+            android:inputType="text" />
+
+        <EditText
+            android:id="@+id/etDistancia"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Distancia"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/etResistencia"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Resistencia"
+            android:inputType="number" />
+
+        <CheckBox
+            android:id="@+id/checkAvifaunaEstructura"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Avifauna" />
+
+        <!-- CRUCETAS -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Crucetas"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etCrucetaSuperior"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Superior - Cantidad"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/etCrucetaInferiorTipo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Inferior - Tipo"
+            android:inputType="text" />
+
+        <!-- BAYONETAS -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Bayonetas"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etBayonetaIzquierda"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Izquierda - Cantidad"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/etBayonetaDerecha"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Derecha - Cantidad"
+            android:inputType="number" />
+
+        <!-- TEMPLETES -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Templetes"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etTempleteCantidad"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Templetes - Cantidad"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/etTempleteAvifauna"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Avifauna - Cantidad"
+            android:inputType="number" />
+
+        <!-- AISLADORES -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Aisladores"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etAisladorTipo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Tipo"
+            android:inputType="text" />
+
+        <EditText
+            android:id="@+id/etAisladorA"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Fase A - Cantidad"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/etAisladorB"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Fase B - Cantidad"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/etAisladorC"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Fase C - Cantidad"
+            android:inputType="number" />
+
+        <!-- DPS -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="DPS"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etDpsA"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Fase A - Cantidad"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/etDpsB"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Fase B - Cantidad"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/etDpsC"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Fase C - Cantidad"
+            android:inputType="number" />
+
+        <!-- SECCIONADOR -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Seccionador / Cortacircuito"
+            android:textStyle="bold" />
+
+        <CheckBox
+            android:id="@+id/checkSeccionador"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Seccionador / Cortacircuito" />
+
+        <!-- AMORTIGUADOR -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Amortiguador"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etAmortiguadorAtras"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Atrás - Cantidad"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/etAmortiguadorAdelante"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Adelante - Cantidad"
+            android:inputType="number" />
+
+        <!-- SPT -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="SPT"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etSptBajante"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Bajante - Cantidad"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/etSptConexion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Conexión - Cantidad"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/etSptSpt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="SPT - Cantidad"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/etSptEstado"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Estado - Cantidad"
+            android:inputType="number" />
+
+        <CheckBox
+            android:id="@+id/checkMedicionR"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Medición R" />
+
+        <CheckBox
+            android:id="@+id/checkMedicionP"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Medición P" />
+
+        <!-- IMAGEN Y BOTONES -->
         <ImageView
             android:id="@+id/imagePreview"
             android:layout_width="match_parent"
@@ -100,7 +312,10 @@
             android:id="@+id/btnAdjuntarFoto"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="📷 Adjuntar Foto" />
+            android:text="📷 Adjuntar Foto"
+            android:backgroundTint= "#1e51ff"
+            android:textColor="#ffffff"
+            />
 
         <!-- BOTÓN FINAL -->
         <Button
@@ -108,7 +323,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Guardar"
-            android:layout_marginTop="16dp" />
-
+            android:layout_marginTop="16dp"
+            android:backgroundTint= "#1e51ff"
+            android:textColor="#ffffff"
+            />
     </LinearLayout>
 </ScrollView>
