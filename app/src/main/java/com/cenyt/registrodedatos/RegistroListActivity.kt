@@ -1,5 +1,6 @@
 package com.cenyt.registrodedatos
 
+import android.content.Context
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -18,11 +19,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import android.net.Uri
+import android.os.Environment
+import android.widget.Toast
+import java.io.File
 
 class RegistroListActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +48,8 @@ class RegistroListActivity : ComponentActivity() {
 
 @Composable
 fun RegistroListScreen(registros: List<Registro>, onVolver: () -> Unit) {
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -58,16 +65,28 @@ fun RegistroListScreen(registros: List<Registro>, onVolver: () -> Unit) {
             }
         }
 
-        Button(
-            onClick = onVolver,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp)
-        ) {
-            Text("Volver")
+        Column {
+            Button(
+                onClick = { exportarRegistrosCSV(context, registros) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                Text("📤 Exportar Registros")
+            }
+
+            Button(
+                onClick = onVolver,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp)
+            ) {
+                Text("Volver")
+            }
         }
     }
 }
+
 
 @Composable
 fun RegistroItem(registro: Registro) {
@@ -146,4 +165,79 @@ fun RegistroItem(registro: Registro) {
             }
         }
     }
+}
+
+fun exportarRegistrosCSV(context: Context, registros: List<Registro>) {
+    val exportDir = File(
+        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+        "RegistrosExportados"
+    )
+    if (!exportDir.exists()) exportDir.mkdirs()
+
+    val csvFile = File(exportDir, "registros_exportados.csv")
+
+    csvFile.bufferedWriter().use { writer ->
+        // Encabezado completo
+        writer.write("fecha,nombre,area,circuito,estructura,lat,long,observaciones," +
+                "apoyoTipo,apoyoCantidad,tipoNorma,distancia,resistencia,avifauna," +
+                "crucetaSup,crucetaInf,bayonetaIzq,bayonetaDer," +
+                "templeteCant,templeteAvifauna,aisladorTipo,aisladorA,aisladorB,aisladorC," +
+                "dpsA,dpsB,dpsC,seccionador,amortAtras,amortAdelante," +
+                "sptBajante,sptConexion,sptCantidad,sptEstado,medR,medP,fotoPath\n")
+
+        registros.forEach { r ->
+            val fotoDestinoPath = r.fotoPath?.let {
+                val origen = File(it)
+                if (origen.exists()) {
+                    val destino = File(exportDir, origen.name)
+                    origen.copyTo(destino, overwrite = true)
+                    destino.absolutePath
+                } else ""
+            } ?: ""
+
+            val fila = listOf(
+                r.fechaHora,
+                r.nombreResponsable,
+                r.area,
+                r.circuito,
+                r.estructuraNumero,
+                r.latitud,
+                r.longitud,
+                r.observaciones,
+                r.apoyoTipo,
+                r.apoyoCantidad,
+                r.tipoNorma,
+                r.distancia,
+                r.resistencia,
+                if (r.avifaunaEstructura) "Sí" else "No",
+                r.crucetaSuperior,
+                r.crucetaInferiorTipo,
+                r.bayonetaIzquierda,
+                r.bayonetaDerecha,
+                r.templeteCantidad,
+                r.templeteAvifauna,
+                r.aisladorTipo,
+                r.aisladorA,
+                r.aisladorB,
+                r.aisladorC,
+                r.dpsA,
+                r.dpsB,
+                r.dpsC,
+                if (r.seccionador) "Sí" else "No",
+                r.amortiguadorAtras,
+                r.amortiguadorAdelante,
+                r.sptBajante,
+                r.sptConexion,
+                r.sptCantidad,
+                r.sptEstado,
+                if (r.medicionR) "Sí" else "No",
+                if (r.medicionP) "Sí" else "No",
+                fotoDestinoPath
+            ).joinToString(",")
+
+            writer.write("$fila\n")
+        }
+    }
+
+    Toast.makeText(context, "Exportado en ${csvFile.absolutePath}", Toast.LENGTH_LONG).show()
 }
