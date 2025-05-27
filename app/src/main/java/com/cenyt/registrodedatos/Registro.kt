@@ -20,16 +20,20 @@ data class Registro(
     // ESTADO DE LOS ELEMENTOS
     val apoyoTipo: String?,
     val apoyoCantidad: Int?,
-    val tipoNorma: String?,
-    val distancia: Int?,
-    val resistencia: Int?,
+    val configuracion: String?, // nueva propiedad
+    val disposicion: String?,  // nueva propiedad
+
+    val altura: Int?,
+    val característicasPlaca: Int?,
+
     val avifaunaEstructura: Boolean,
+    val avifaunaEquipos: String?,
 
     val crucetaSuperior: Int?,
     val crucetaInferiorTipo: String?,
 
-    val bayonetaIzquierda: Int?,
-    val bayonetaDerecha: Int?,
+    val bayonetaTipo: String?,
+    val bayonetaObservaciones: String?,
 
     val templeteCantidad: Int?,
     val templeteAvifauna: Int?,
@@ -45,15 +49,14 @@ data class Registro(
 
     val seccionador: Boolean,
 
-    val amortiguadorAtras: Int?,
-    val amortiguadorAdelante: Int?,
+    val equiposAdicionales: String?,
 
     val sptBajante: Int?,
     val sptConexion: Int?,
     val sptCantidad: Int?,
     val sptEstado: Int?,
-    val medicionR: Boolean,
-    val medicionP: Boolean,
+    // val medicionR: Boolean,
+    // val medicionP: Boolean,
 
     val fotoPath: String?
 )

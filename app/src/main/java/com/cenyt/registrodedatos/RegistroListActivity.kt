@@ -109,16 +109,18 @@ fun RegistroItem(registro: Registro) {
 
             Text("Apoyo Tipo: ${registro.apoyoTipo ?: "-"}")
             Text("Apoyo Cantidad: ${registro.apoyoCantidad ?: "-"}")
-            Text("Tipo norma: ${registro.tipoNorma ?: "-"}")
-            Text("Distancia: ${registro.distancia ?: "-"}")
-            Text("Resistencia: ${registro.resistencia ?: "-"}")
+            Text("Disposicion: ${registro.disposicion ?: "-"}")
+            Text("Configuracion : ${registro.configuracion ?: "-"}")
+            Text("Altura: ${registro.altura ?: "-"}")
+            Text("Características Placa: ${registro.característicasPlaca ?: "-"}")
             Text("Avifauna: ${if (registro.avifaunaEstructura) "Sí" else "No"}")
+            Text("Equipos relacionados avifauna: ${registro.avifaunaEquipos ?: "-"}")
 
             Text("Cruceta superior: ${registro.crucetaSuperior ?: "-"}")
             Text("Cruceta inferior tipo: ${registro.crucetaInferiorTipo ?: "-"}")
 
-            Text("Bayoneta izquierda: ${registro.bayonetaIzquierda ?: "-"}")
-            Text("Bayoneta derecha: ${registro.bayonetaDerecha ?: "-"}")
+            Text("Bayoneta Tipo: ${registro.bayonetaTipo ?: "-"}")
+            Text("Bayoneta observaciones: ${registro.bayonetaObservaciones ?: "-"}")
 
             Text("Templete cantidad: ${registro.templeteCantidad ?: "-"}")
             Text("Templete avifauna: ${registro.templeteAvifauna ?: "-"}")
@@ -134,35 +136,38 @@ fun RegistroItem(registro: Registro) {
 
             Text("Seccionador/Cortacircuito: ${if (registro.seccionador) "Sí" else "No"}")
 
-            Text("Amortiguador atrás: ${registro.amortiguadorAtras ?: "-"}")
-            Text("Amortiguador adelante: ${registro.amortiguadorAdelante ?: "-"}")
+            Text("Equipos Adicionales: ${registro.equiposAdicionales ?: "-"}")
 
             Text("SPT Bajante: ${registro.sptBajante ?: "-"}")
             Text("SPT Conexión: ${registro.sptConexion ?: "-"}")
             Text("SPT: ${registro.sptCantidad ?: "-"}")
             Text("SPT Estado: ${registro.sptEstado ?: "-"}")
-            Text("Medición R: ${if (registro.medicionR) "Sí" else "No"}")
-            Text("Medición P: ${if (registro.medicionP) "Sí" else "No"}")
+            // Text("Medición R: ${if (registro.medicionR) "Sí" else "No"}")
+            // Text("Medición P: ${if (registro.medicionP) "Sí" else "No"}")
 
-            registro.fotoPath?.let { path ->
-                val imageBitmap = remember(path) {
-                    try {
-                        BitmapFactory.decodeFile(path)?.asImageBitmap()
-                    } catch (e: Exception) {
-                        null
+            registro.fotoPath
+                ?.split(";")
+                ?.filter { it.isNotBlank() }
+                ?.forEach { path ->
+                    val imageBitmap = remember(path) {
+                        try {
+                            BitmapFactory.decodeFile(path)?.asImageBitmap()
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+                    imageBitmap?.let { img ->
+                        Image(
+                            bitmap = img,
+                            contentDescription = "Imagen adjunta",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .padding(vertical = 4.dp),
+                            contentScale = ContentScale.Crop
+                        )
                     }
                 }
-                imageBitmap?.let { img ->
-                    Image(
-                        bitmap = img,
-                        contentDescription = "Imagen adjunta",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-            }
         }
     }
 }
@@ -179,21 +184,24 @@ fun exportarRegistrosCSV(context: Context, registros: List<Registro>) {
     csvFile.bufferedWriter().use { writer ->
         // Encabezado completo
         writer.write("fecha,nombre,area,circuito,estructura,lat,long,observaciones," +
-                "apoyoTipo,apoyoCantidad,tipoNorma,distancia,resistencia,avifauna," +
-                "crucetaSup,crucetaInf,bayonetaIzq,bayonetaDer," +
+                "apoyoTipo,apoyoCantidad,configuracion,disposicion,altura,característicasPlaca,avifauna,avifaunaEquipos" +
+                "crucetaSup,crucetaInf,bayonetaTipo,bayonetaObservaciones," +
                 "templeteCant,templeteAvifauna,aisladorTipo,aisladorA,aisladorB,aisladorC," +
-                "dpsA,dpsB,dpsC,seccionador,amortAtras,amortAdelante," +
+                "dpsA,dpsB,dpsC,seccionador,equiposAdicionales" +
                 "sptBajante,sptConexion,sptCantidad,sptEstado,medR,medP,fotoPath\n")
 
         registros.forEach { r ->
-            val fotoDestinoPath = r.fotoPath?.let {
-                val origen = File(it)
-                if (origen.exists()) {
-                    val destino = File(exportDir, origen.name)
-                    origen.copyTo(destino, overwrite = true)
-                    destino.absolutePath
-                } else ""
-            } ?: ""
+            val fotoDestinoPath = r.fotoPath?.split(";")
+                ?.filter { it.isNotBlank() }
+                ?.map { ruta ->
+                    val origen = File(ruta)
+                    if (origen.exists()) {
+                        val destino = File(exportDir, origen.name)
+                        origen.copyTo(destino, overwrite = true)
+                        destino.absolutePath
+                    } else ""
+                }?.joinToString(";") ?: ""
+
 
             val fila = listOf(
                 r.fechaHora,
@@ -206,14 +214,15 @@ fun exportarRegistrosCSV(context: Context, registros: List<Registro>) {
                 r.observaciones,
                 r.apoyoTipo,
                 r.apoyoCantidad,
-                r.tipoNorma,
-                r.distancia,
-                r.resistencia,
+                r.configuracion,
+                r.altura,
+                r.característicasPlaca,
                 if (r.avifaunaEstructura) "Sí" else "No",
+                r.avifaunaEquipos,
                 r.crucetaSuperior,
                 r.crucetaInferiorTipo,
-                r.bayonetaIzquierda,
-                r.bayonetaDerecha,
+                r.bayonetaTipo,
+                r.bayonetaObservaciones,
                 r.templeteCantidad,
                 r.templeteAvifauna,
                 r.aisladorTipo,
@@ -224,14 +233,13 @@ fun exportarRegistrosCSV(context: Context, registros: List<Registro>) {
                 r.dpsB,
                 r.dpsC,
                 if (r.seccionador) "Sí" else "No",
-                r.amortiguadorAtras,
-                r.amortiguadorAdelante,
+                r.equiposAdicionales,
                 r.sptBajante,
                 r.sptConexion,
                 r.sptCantidad,
                 r.sptEstado,
-                if (r.medicionR) "Sí" else "No",
-                if (r.medicionP) "Sí" else "No",
+                // if (r.medicionR) "Sí" else "No",
+                // if (r.medicionP) "Sí" else "No",
                 fotoDestinoPath
             ).joinToString(",")
 

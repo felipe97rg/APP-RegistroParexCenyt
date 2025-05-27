@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [Registro::class], version = 7)
+@Database(entities = [Registro::class], version = 14)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun registroDao(): RegistroDao
 
