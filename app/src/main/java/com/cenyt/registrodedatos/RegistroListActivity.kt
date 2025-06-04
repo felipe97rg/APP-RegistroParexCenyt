@@ -23,10 +23,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+
+import android.app.DatePickerDialog
+import java.util.*
+
+
+import androidx.compose.runtime.*
+
 import coil.compose.rememberAsyncImagePainter
 import android.net.Uri
 import android.os.Environment
 import android.widget.Toast
+import androidx.compose.material3.OutlinedTextField
 import java.io.File
 
 class RegistroListActivity : ComponentActivity() {
@@ -35,20 +43,62 @@ class RegistroListActivity : ComponentActivity() {
 
         val db = AppDatabase.getDatabase(this)
 
-        lifecycleScope.launch {
-            val registros = db.registroDao().obtenerTodos()
-            setContent {
-                RegistroListScreen(registros = registros) {
-                    finish()
-                }
+        setContent {
+            val registrosState = remember { mutableStateOf<List<Registro>>(emptyList()) }
+
+            // Carga asincrónica
+            LaunchedEffect(Unit) {
+                registrosState.value = db.registroDao().obtenerTodos()
+            }
+
+            RegistroListScreen(registros = registrosState.value) {
+                finish()
             }
         }
     }
-}
+
+
+
+
+
 
 @Composable
 fun RegistroListScreen(registros: List<Registro>, onVolver: () -> Unit) {
     val context = LocalContext.current
+    var query by remember { mutableStateOf("") }
+    var selectedDate by remember { mutableStateOf("") }
+
+    val registrosFiltrados = remember(query, selectedDate, registros) {
+        registros.filter { registro ->
+            val coincideTexto = query.isBlank() || listOfNotNull(
+                registro.estructuraNumero,
+                registro.area,
+                registro.circuito,
+                registro.avifaunaEquipos,
+                registro.disposicion,
+                registro.configuracion,
+                registro.observaciones
+            ).any { it.contains(query, ignoreCase = true) }
+
+            val coincideFecha = selectedDate.isBlank() || registro.fechaHora?.startsWith(selectedDate) == true
+
+            coincideTexto && coincideFecha
+        }
+    }
+
+    // Picker de fecha
+    val calendar = Calendar.getInstance()
+    val datePicker = remember {
+        DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                selectedDate = "%04d-%02d-%02d".format(year, month + 1, dayOfMonth) // formato yyyy-MM-dd
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -56,10 +106,41 @@ fun RegistroListScreen(registros: List<Registro>, onVolver: () -> Unit) {
             .padding(16.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = { query = it },
+            label = { Text("Buscar por nombre, área o circuito") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+        )
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Button(
+                onClick = { datePicker.show() },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(if (selectedDate.isBlank()) "📅 Filtrar por fecha" else "Fecha: $selectedDate")
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Button(
+                onClick = { selectedDate = "" },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("❌ Limpiar fecha")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text("Mostrando ${registrosFiltrados.size} de ${registros.size} registros", modifier = Modifier.padding(vertical = 4.dp))
+
         LazyColumn(
             modifier = Modifier.weight(1f)
         ) {
-            items(registros) { registro ->
+            items(registrosFiltrados) { registro ->
                 RegistroItem(registro)
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -67,7 +148,7 @@ fun RegistroListScreen(registros: List<Registro>, onVolver: () -> Unit) {
 
         Column {
             Button(
-                onClick = { exportarRegistrosCSV(context, registros) },
+                onClick = { exportarRegistrosCSV(context, registrosFiltrados) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
@@ -86,6 +167,7 @@ fun RegistroListScreen(registros: List<Registro>, onVolver: () -> Unit) {
         }
     }
 }
+
 
 
 @Composable
@@ -182,13 +264,13 @@ fun exportarRegistrosCSV(context: Context, registros: List<Registro>) {
     val csvFile = File(exportDir, "registros_exportados.csv")
 
     csvFile.bufferedWriter().use { writer ->
-        // Encabezado completo
-        writer.write("fecha,nombre,area,circuito,estructura,lat,long,observaciones," +
-                "apoyoTipo,apoyoCantidad,configuracion,disposicion,altura,característicasPlaca,avifauna,avifaunaEquipos" +
-                "crucetaSup,crucetaInf,bayonetaTipo,bayonetaObservaciones," +
-                "templeteCant,templeteAvifauna,aisladorTipo,aisladorA,aisladorB,aisladorC," +
-                "dpsA,dpsB,dpsC,seccionador,equiposAdicionales" +
-                "sptBajante,sptConexion,sptCantidad,sptEstado,medR,medP,fotoPath\n")
+        // Encabezado
+        writer.write("fecha;nombre;area;circuito;estructura;lat;long;observaciones;" +
+                "apoyoTipo;apoyoCantidad;configuracion;disposicion;altura;característicasPlaca;avifauna;avifaunaEquipos;" +
+                "crucetaSup;crucetaInf;bayonetaTipo;bayonetaObservaciones;" +
+                "templeteCant;templeteAvifauna;aisladorTipo;aisladorA;aisladorB;aisladorC;" +
+                "dpsA;dpsB;dpsC;seccionador;equiposAdicionales;" +
+                "sptBajante;sptConexion;sptCantidad;sptEstado;fotoPath\n")
 
         registros.forEach { r ->
             val fotoDestinoPath = r.fotoPath?.split(";")
@@ -202,7 +284,6 @@ fun exportarRegistrosCSV(context: Context, registros: List<Registro>) {
                     } else ""
                 }?.joinToString(";") ?: ""
 
-
             val fila = listOf(
                 r.fechaHora,
                 r.nombreResponsable,
@@ -215,6 +296,7 @@ fun exportarRegistrosCSV(context: Context, registros: List<Registro>) {
                 r.apoyoTipo,
                 r.apoyoCantidad,
                 r.configuracion,
+                r.disposicion,
                 r.altura,
                 r.característicasPlaca,
                 if (r.avifaunaEstructura) "Sí" else "No",
@@ -238,14 +320,19 @@ fun exportarRegistrosCSV(context: Context, registros: List<Registro>) {
                 r.sptConexion,
                 r.sptCantidad,
                 r.sptEstado,
-                // if (r.medicionR) "Sí" else "No",
-                // if (r.medicionP) "Sí" else "No",
                 fotoDestinoPath
-            ).joinToString(",")
+            ).joinToString(";") { campo ->
+                campo?.toString()
+                    ?.replace("\"", "'")  // reemplaza comillas dobles por simples para evitar romper formato
+                    ?.replace("\n", " ")  // elimina saltos de línea
+                    ?.replace("\r", "")   // elimina retornos de carro
+                    ?: ""
+            }
 
             writer.write("$fila\n")
         }
     }
 
     Toast.makeText(context, "Exportado en ${csvFile.absolutePath}", Toast.LENGTH_LONG).show()
+}
 }
