@@ -46,7 +46,7 @@ fun PantallaPrincipal(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF97C9FF),  // azul claro arriba
+                        Color(0xFFFFFFFF),  // azul claro arriba
                         Color(0xFF61AEFA), // intermedio 1
                         Color(0xFF2C92F8), // intermedio 2
                         Color(0xFF003366) // azul oscuro

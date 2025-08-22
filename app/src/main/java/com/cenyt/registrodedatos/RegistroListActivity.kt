@@ -1,62 +1,95 @@
 package com.cenyt.registrodedatos
-
+import android.app.DatePickerDialog
 import android.content.Context
+import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.os.Environment
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.lifecycle.lifecycleScope
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-import android.app.DatePickerDialog
-import java.util.*
-
-
-import androidx.compose.runtime.*
-
-import coil.compose.rememberAsyncImagePainter
-import android.net.Uri
-import android.os.Environment
-import android.widget.Toast
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.background
 import java.io.File
+import java.util.Calendar
+import kotlinx.coroutines.launch
+import androidx.lifecycle.lifecycleScope
+import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.size
+import coil.compose.AsyncImage
 
 class RegistroListActivity : ComponentActivity() {
+
+    // --- PASO 1: Mover el estado aquí ---
+    private val registrosState = mutableStateOf<List<Registro>>(emptyList())
+    private lateinit var db: AppDatabase
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val db = AppDatabase.getDatabase(this)
+        db = AppDatabase.getDatabase(this)
+
+        // Ahora solo llamamos a la función de carga la primera vez
+        cargarRegistros()
 
         setContent {
-            val registrosState = remember { mutableStateOf<List<Registro>>(emptyList()) }
-
-            // Carga asincrónica
-            LaunchedEffect(Unit) {
-                registrosState.value = db.registroDao().obtenerTodos()
-            }
-
+            // El setContent ahora es más limpio
             RegistroListScreen(registros = registrosState.value) {
                 finish()
             }
         }
     }
 
+    // --- PASO 3 (Parte A): Sobrescribir onResume ---
+    override fun onResume() {
+        super.onResume()
+        // Cada vez que volvemos a la pantalla, recargamos los datos
+        cargarRegistros()
+    }
+
+    // --- PASO 2: Crear la función de carga ---
+    private fun cargarRegistros() {
+        lifecycleScope.launch {
+            registrosState.value = db.registroDao().obtenerTodos()
+        }
+    }
+}
 
 
 
@@ -80,19 +113,19 @@ fun RegistroListScreen(registros: List<Registro>, onVolver: () -> Unit) {
                 registro.observaciones
             ).any { it.contains(query, ignoreCase = true) }
 
+            // CORRECCIÓN DE BUG: Añadimos un chequeo de nulidad para evitar crashes
             val coincideFecha = selectedDate.isBlank() || registro.fechaHora?.startsWith(selectedDate) == true
 
             coincideTexto && coincideFecha
         }
     }
 
-    // Picker de fecha
     val calendar = Calendar.getInstance()
     val datePicker = remember {
         DatePickerDialog(
             context,
             { _, year, month, dayOfMonth ->
-                selectedDate = "%04d-%02d-%02d".format(year, month + 1, dayOfMonth) // formato yyyy-MM-dd
+                selectedDate = "%04d-%02d-%02d".format(year, month + 1, dayOfMonth)
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
@@ -103,66 +136,95 @@ fun RegistroListScreen(registros: List<Registro>, onVolver: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.SpaceBetween
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFE3F2FD), // Azul muy claro
+                        Color(0xFF1F6FE1)  // Azul un poco más oscuro
+                    )
+                )
+            )
+            .padding(16.dp)
     ) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = { query = it },
-            label = { Text("Buscar por nombre, área o circuito") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp)
-        )
+        // --- NUEVA TARJETA PARA LOS CONTROLES ---
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                // Campo de búsqueda (movido aquí dentro)
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    label = { Text("Buscar por nombre, área o circuito") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                )
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Button(
-                onClick = { datePicker.show() },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(if (selectedDate.isBlank()) "📅 Filtrar por fecha" else "Fecha: $selectedDate")
+                // Botones de fecha (movidos aquí dentro)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Button(
+                        onClick = { datePicker.show() },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(if (selectedDate.isBlank()) "📅 Filtrar por fecha" else "Fecha: $selectedDate")
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = { selectedDate = "" },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("❌ Limpiar fecha")
+                    }
+                }
             }
+        } // --- FIN DE LA NUEVA TARJETA ---
 
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Button(
-                onClick = { selectedDate = "" },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("❌ Limpiar fecha")
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp)) // Aumentamos el espacio
 
         Text("Mostrando ${registrosFiltrados.size} de ${registros.size} registros", modifier = Modifier.padding(vertical = 4.dp))
 
         LazyColumn(
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 0.dp) // Quitamos el padding de aquí para que las tarjetas lleguen a los bordes del padding principal
         ) {
             items(registrosFiltrados) { registro ->
-                RegistroItem(registro)
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-        }
-
-        Column {
-            Button(
-                onClick = { exportarRegistrosCSV(context, registrosFiltrados) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-            ) {
-                Text("📤 Exportar Registros")
+                RegistroItem(
+                    registro = registro,
+                    onEditarClick = {
+                        val intent = Intent(context, RegistroFormActivity::class.java).apply {
+                            putExtra("REGISTRO_ID", registro.id)
+                        }
+                        context.startActivity(intent)
+                    }
+                )
+                Spacer(modifier = Modifier.height(12.dp)) // Espacio entre tarjetas de la lista
             }
 
-            Button(
-                onClick = onVolver,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp)
-            ) {
-                Text("Volver")
+            item {
+                Column {
+                    Button(
+                        onClick = { exportarRegistrosCSV(context, registrosFiltrados) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                    ) {
+                        Text("📤 Exportar Registros")
+                    }
+
+                    Button(
+                        onClick = onVolver,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp)
+                    ) {
+                        Text("Volver")
+                    }
+                }
             }
         }
     }
@@ -171,8 +233,14 @@ fun RegistroListScreen(registros: List<Registro>, onVolver: () -> Unit) {
 
 
 @Composable
-fun RegistroItem(registro: Registro) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+fun RegistroItem(registro: Registro, onEditarClick: () -> Unit) {
+    // Necesitarás este import:
+    // import androidx.compose.material3.CardDefaults
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp) // <-- AÑADE ESTO
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
             Text("DATOS DEL SITIO", fontWeight = FontWeight.Bold, fontSize = 18.sp)
@@ -227,32 +295,55 @@ fun RegistroItem(registro: Registro) {
             // Text("Medición R: ${if (registro.medicionR) "Sí" else "No"}")
             // Text("Medición P: ${if (registro.medicionP) "Sí" else "No"}")
 
-            registro.fotoPath
-                ?.split(";")
-                ?.filter { it.isNotBlank() }
-                ?.forEach { path ->
-                    val imageBitmap = remember(path) {
-                        try {
-                            BitmapFactory.decodeFile(path)?.asImageBitmap()
-                        } catch (e: Exception) {
-                            null
-                        }
-                    }
-                    imageBitmap?.let { img ->
-                        Image(
-                            bitmap = img,
-                            contentDescription = "Imagen adjunta",
+            // Primero, preparamos la lista de rutas de fotos
+            val photoPaths = remember(registro.fotoPath) {
+                registro.fotoPath?.split(";")?.filter { it.isNotBlank() } ?: emptyList()
+            }
+
+            // Si hay fotos, mostramos el carrusel horizontal
+            if (photoPaths.isNotEmpty()) {
+                // Necesitarás estos imports:
+                // import androidx.compose.foundation.lazy.LazyRow
+                // import androidx.compose.foundation.lazy.items
+                // import androidx.compose.foundation.shape.RoundedCornerShape
+                // import androidx.compose.ui.draw.clip
+                // import androidx.compose.foundation.layout.size
+
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(photoPaths) { path ->
+                        // Cargamos el bitmap de la imagen
+                        // Necesitarás este import:
+                        // import coil.compose.AsyncImage
+
+                        // Coil se encarga de todo
+                        AsyncImage(
+                            model = File(path),
+                            contentDescription = "Miniatura de imagen adjunta",
+                            contentScale = ContentScale.Crop,
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
-                                .padding(vertical = 4.dp),
-                            contentScale = ContentScale.Crop
+                                .padding(end = 8.dp)
+                                .size(80.dp)
+                                .clip(RoundedCornerShape(8.dp))
                         )
                     }
                 }
+            }
+            Spacer(modifier = Modifier.height(16.dp)) // Un poco de espacio extra
+
+            Button(
+                onClick = onEditarClick ,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("✏️ Editar")
+            }
         }
     }
 }
+
+
+
 
 fun exportarRegistrosCSV(context: Context, registros: List<Registro>) {
     val exportDir = File(
@@ -265,24 +356,25 @@ fun exportarRegistrosCSV(context: Context, registros: List<Registro>) {
 
     csvFile.bufferedWriter().use { writer ->
         // Encabezado
-        writer.write("fecha;nombre;area;circuito;estructura;lat;long;observaciones;" +
-                "apoyoTipo;apoyoCantidad;configuracion;disposicion;altura;característicasPlaca;avifauna;avifaunaEquipos;" +
-                "crucetaSup;crucetaInf;bayonetaTipo;bayonetaObservaciones;" +
-                "templeteCant;templeteAvifauna;aisladorTipo;aisladorA;aisladorB;aisladorC;" +
-                "dpsA;dpsB;dpsC;seccionador;equiposAdicionales;" +
-                "sptBajante;sptConexion;sptCantidad;sptEstado;fotoPath\n")
+        writer.write(
+            "fecha;nombre;area;circuito;estructura;lat;long;observaciones;" +
+                    "apoyoTipo;apoyoCantidad;configuracion;disposicion;altura;característicasPlaca;avifauna;avifaunaEquipos;" +
+                    "crucetaSup;crucetaInf;bayonetaTipo;bayonetaObservaciones;" +
+                    "templeteCant;templeteAvifauna;aisladorTipo;aisladorA;aisladorB;aisladorC;" +
+                    "dpsA;dpsB;dpsC;seccionador;equiposAdicionales;" +
+                    "sptBajante;sptConexion;sptCantidad;sptEstado;fotoPath\n"
+        )
 
         registros.forEach { r ->
             val fotoDestinoPath = r.fotoPath?.split(";")
-                ?.filter { it.isNotBlank() }
-                ?.map { ruta ->
+                ?.filter { it.isNotBlank() }?.joinToString(";") { ruta ->
                     val origen = File(ruta)
                     if (origen.exists()) {
                         val destino = File(exportDir, origen.name)
                         origen.copyTo(destino, overwrite = true)
                         destino.absolutePath
                     } else ""
-                }?.joinToString(";") ?: ""
+                } ?: ""
 
             val fila = listOf(
                 r.fechaHora,
@@ -323,7 +415,10 @@ fun exportarRegistrosCSV(context: Context, registros: List<Registro>) {
                 fotoDestinoPath
             ).joinToString(";") { campo ->
                 campo?.toString()
-                    ?.replace("\"", "'")  // reemplaza comillas dobles por simples para evitar romper formato
+                    ?.replace(
+                        "\"",
+                        "'"
+                    )  // reemplaza comillas dobles por simples para evitar romper formato
                     ?.replace("\n", " ")  // elimina saltos de línea
                     ?.replace("\r", "")   // elimina retornos de carro
                     ?: ""
@@ -332,7 +427,9 @@ fun exportarRegistrosCSV(context: Context, registros: List<Registro>) {
             writer.write("$fila\n")
         }
     }
+    Toast.makeText(/* context = */ context, /* text = */
+        "Exportado en ${csvFile.absolutePath}", /* duration = */
+        Toast.LENGTH_LONG
+    ).show()
 
-    Toast.makeText(context, "Exportado en ${csvFile.absolutePath}", Toast.LENGTH_LONG).show()
-}
 }

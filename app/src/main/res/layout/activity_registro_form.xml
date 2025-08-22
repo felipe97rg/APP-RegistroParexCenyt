@@ -1,10 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-
-
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@drawable/background_gradient"
+    android:clipToPadding="false"
+    android:paddingBottom="28dp">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="28dp"
+        android:layout_marginStart="28dp"
+        android:layout_marginEnd="28dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -12,7 +22,6 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- 🟦 SECCIÓN: DATOS DEL SITIO -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -44,10 +53,8 @@
             />
         <EditText android:id="@+id/etObservaciones" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Observaciones" android:minLines="3" android:gravity="top" android:inputType="textMultiLine" />
 
-        <!-- 🟩 SECCIÓN: ESTADO DE LOS ELEMENTOS -->
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ESTADO DE LOS ELEMENTOS" android:textStyle="bold" android:textSize="18sp" android:paddingTop="16dp" android:paddingBottom="8dp" />
 
-        <!-- ESTRUCTURA -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -127,7 +134,6 @@
             android:hint="Equipos relacionados a avifauna"
             android:inputType="text" />
 
-        <!-- CRUCETAS -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -148,7 +154,6 @@
             android:hint="Inferior - Tipo"
             android:inputType="text" />
 
-        <!-- BAYONETAS -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -167,7 +172,6 @@
             android:hint="Observaciones"
             android:inputType="text" />
 
-        <!-- TEMPLETES -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -188,8 +192,6 @@
             android:hint="Avifauna - Cantidad"
             android:inputType="number" />
 
-        <!-- AISLADORES -->
-        <!-- AISLADORES -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -233,7 +235,6 @@
             android:hint="Fase C - Cantidad"
             android:inputType="number" />
 
-        <!-- DPS -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -261,7 +262,6 @@
             android:hint="Fase C - Cantidad"
             android:inputType="number" />
 
-        <!-- SECCIONADOR -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -274,7 +274,6 @@
             android:layout_height="wrap_content"
             android:text="Seccionador / Cortacircuito" />
 
-        <!-- EQUIPOS ADICIONALES -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -288,9 +287,6 @@
             android:hint="Equipos Adicionales"
             android:inputType= "text"/>
 
-
-
-        <!-- SPT -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -325,24 +321,6 @@
             android:hint="Estado - Cantidad"
             android:inputType="number" />
 
-        <!--
-        <CheckBox
-              android:id="@+id/checkMedicionR"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:text="Medición R" />
-
-          <CheckBox
-              android:id="@+id/checkMedicionP"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:text="Medición P" />
-
-              -->
-
-          <!-- IMAGEN Y BOTONES -->
-
-        <!-- Imagen principal -->
         <ImageView
             android:id="@+id/imagePreview"
             android:layout_width="match_parent"
@@ -380,8 +358,6 @@
             android:layout_height="wrap_content"
             android:text="Adjuntar varias fotos" />
 
-
-        <!-- BOTÓN FINAL -->
         <Button
             android:id="@+id/btnGuardar"
             android:layout_width="wrap_content"
@@ -391,5 +367,9 @@
             android:backgroundTint= "#1e51ff"
             android:textColor="#ffffff"
             />
+
     </LinearLayout>
+
+</androidx.cardview.widget.CardView>
+
 </ScrollView>

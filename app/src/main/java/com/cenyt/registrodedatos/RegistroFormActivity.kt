@@ -1,5 +1,4 @@
 package com.cenyt.registrodedatos
-
 import android.Manifest
 import android.app.AlertDialog
 import android.content.Intent
@@ -11,6 +10,8 @@ import android.provider.MediaStore
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.Composable
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import com.google.android.gms.location.LocationServices
@@ -30,6 +31,7 @@ class RegistroFormActivity : AppCompatActivity() {
     private val REQUEST_IMAGE_CAPTURE = 1
     private val REQUEST_IMAGE_GALLERY = 2
     private val REQUEST_MULTIPLE_IMAGES = 3
+    private var registroActual: Registro? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,6 +40,18 @@ class RegistroFormActivity : AppCompatActivity() {
 
         db = AppDatabase.getDatabase(this)
 
+        val registroId = intent.getIntExtra("REGISTRO_ID", -1)
+
+        if (registroId != -1) {
+            CoroutineScope(Dispatchers.IO).launch {
+                registroActual = db.registroDao().obtenerPorId(registroId)
+                runOnUiThread {
+                    registroActual?.let { cargarDatosEnFormulario(it) }
+                }
+            }
+        }
+
+        // --- Configuración de Spinners ---
         val spinnerApoyoTipo = findViewById<Spinner>(R.id.spinnerApoyoTipo)
         val opcionesApoyo = listOf("P", "T", "Otro")
         spinnerApoyoTipo.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, opcionesApoyo)
@@ -58,16 +72,13 @@ class RegistroFormActivity : AppCompatActivity() {
         val opcionesbayoneta = listOf("Sencilla" , "Doble")
         spinnerbayoneta.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, opcionesbayoneta)
 
-
-
-
-        val imageView = findViewById<ImageView>(R.id.imagePreview)
-        val btnFoto = findViewById<Button>(R.id.btnAdjuntarFoto)
+        // --- Configuración de otros elementos y Listeners ---
         val tvFechaHora = findViewById<TextView>(R.id.tvFechaHora)
         fechaHoraActual = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())
         tvFechaHora.text = "Fecha y hora: $fechaHoraActual"
 
-        btnFoto.setOnClickListener {
+        // LÓGICA RESTAURADA para el botón de adjuntar foto
+        findViewById<Button>(R.id.btnAdjuntarFoto).setOnClickListener {
             val opciones = arrayOf("Tomar Foto", "Elegir desde Galería")
             AlertDialog.Builder(this)
                 .setTitle("Selecciona una opción")
@@ -79,8 +90,8 @@ class RegistroFormActivity : AppCompatActivity() {
                 }.show()
         }
 
-        val btnMultiplesFotos = findViewById<Button>(R.id.btnAdjuntarMultiplesFotos)
-        btnMultiplesFotos.setOnClickListener {
+        // LÓGICA RESTAURADA para adjuntar múltiples fotos
+        findViewById<Button>(R.id.btnAdjuntarMultiplesFotos).setOnClickListener {
             val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                 type = "image/*"
                 putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
@@ -88,27 +99,44 @@ class RegistroFormActivity : AppCompatActivity() {
             startActivityForResult(Intent.createChooser(intent, "Selecciona imágenes"), REQUEST_MULTIPLE_IMAGES)
         }
 
+        // LÓGICA RESTAURADA para el botón de ubicación (GPS)
+        // LÓGICA MEJORADA para el botón de ubicación (GPS)
+        findViewById<Button>(R.id.btnUbicacion).setOnClickListener {
+            val btnUbicacion = it as Button // Obtenemos una referencia al botón mismo
 
-        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        val etLatitud = findViewById<EditText>(R.id.etLatitud)
-        val etLongitud = findViewById<EditText>(R.id.etLongitud)
-        val btnUbicacion = findViewById<Button>(R.id.btnUbicacion)
+            // PASO 1: Dar retroalimentación al usuario
+            btnUbicacion.isEnabled = false // Desactivamos el botón para que no lo presionen de nuevo
+            Toast.makeText(this, "Buscando ubicación...", Toast.LENGTH_SHORT).show()
 
-        btnUbicacion.setOnClickListener {
+            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+            // Verificamos los permisos como antes
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 100)
+                btnUbicacion.isEnabled = true // Lo volvemos a activar si no hay permisos
                 return@setOnClickListener
             }
-            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                if (location != null) {
-                    etLatitud.setText(location.latitude.toString())
-                    etLongitud.setText(location.longitude.toString())
-                } else {
-                    Toast.makeText(this, "No se pudo obtener la ubicación", Toast.LENGTH_SHORT).show()
+
+            // PASO 2: Usar getCurrentLocation en lugar de lastLocation
+            fusedLocationClient.getCurrentLocation(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, null)
+                .addOnSuccessListener { location ->
+                    // PASO 3: Volver a activar el botón y mostrar el resultado
+                    btnUbicacion.isEnabled = true
+                    if (location != null) {
+                        findViewById<EditText>(R.id.etLatitud).setText(location.latitude.toString())
+                        findViewById<EditText>(R.id.etLongitud).setText(location.longitude.toString())
+                    } else {
+                        Toast.makeText(this, "No se pudo obtener la ubicación. Intenta de nuevo.", Toast.LENGTH_LONG).show()
+                    }
                 }
-            }
+                .addOnFailureListener {
+                    // En caso de error, también reactivamos el botón
+                    btnUbicacion.isEnabled = true
+                    Toast.makeText(this, "Error al obtener la ubicación: ${it.message}", Toast.LENGTH_LONG).show()
+                }
         }
 
+        // Listener del botón Guardar
         findViewById<Button>(R.id.btnGuardar).setOnClickListener {
             guardarRegistro()
         }
@@ -153,7 +181,9 @@ class RegistroFormActivity : AppCompatActivity() {
         val getInt = { id: Int -> getText(id).toIntOrNull() }
         val getCheck = { id: Int -> findViewById<CheckBox>(id).isChecked }
 
-        val nuevoRegistro = Registro(
+        // Creamos un objeto con los datos actuales del formulario
+        val datosFormulario = Registro(
+            id = registroActual?.id ?: 0, // Mantenemos el ID original si estamos editando
             fechaHora = fechaHoraActual,
             nombreResponsable = getText(R.id.etNombre),
             area = getText(R.id.etArea),
@@ -189,15 +219,21 @@ class RegistroFormActivity : AppCompatActivity() {
             sptConexion = getInt(R.id.etSptConexion),
             sptCantidad = getInt(R.id.etSptSpt),
             sptEstado = getInt(R.id.etSptEstado),
-            // medicionR = getCheck(R.id.checkMedicionR),
-            // medicionP = getCheck(R.id.checkMedicionP),
             fotoPath = multiplePhotoPaths.joinToString(";"),
         )
 
+        // Lanzamos la corutina para la operación de base de datos
         CoroutineScope(Dispatchers.IO).launch {
-            db.registroDao().insertar(nuevoRegistro)
+            if (registroActual != null) {
+                // MODO EDICIÓN: Usamos la función actualizar
+                db.registroDao().actualizar(datosFormulario)
+            } else {
+                // MODO CREACIÓN: Usamos la función insertar
+                db.registroDao().insertar(datosFormulario)
+            }
+
             runOnUiThread {
-                Toast.makeText(this@RegistroFormActivity, "Registro guardado", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@RegistroFormActivity, "Registro guardado exitosamente", Toast.LENGTH_SHORT).show()
                 finish()
             }
         }
@@ -314,4 +350,75 @@ class RegistroFormActivity : AppCompatActivity() {
             layout.addView(preview)
         }
     }
+
+
+    private fun cargarDatosEnFormulario(registro: Registro) {
+        // --- Textos (EditText) ---
+        findViewById<TextView>(R.id.tvFechaHora).text = "Fecha y hora: ${registro.fechaHora}"
+        findViewById<EditText>(R.id.etNombre).setText(registro.nombreResponsable)
+        findViewById<EditText>(R.id.etArea).setText(registro.area)
+        findViewById<EditText>(R.id.etCircuito).setText(registro.circuito)
+        findViewById<EditText>(R.id.etEstructura).setText(registro.estructuraNumero)
+        findViewById<EditText>(R.id.etLatitud).setText(registro.latitud ?: "")
+        findViewById<EditText>(R.id.etLongitud).setText(registro.longitud ?: "")
+        findViewById<EditText>(R.id.etObservaciones).setText(registro.observaciones)
+
+        // --- Números (EditText) ---
+        findViewById<EditText>(R.id.etApoyoCantidad).setText(registro.apoyoCantidad?.toString() ?: "")
+        findViewById<EditText>(R.id.etAltura).setText(registro.altura?.toString() ?: "")
+        findViewById<EditText>(R.id.etcaracterísticasPlaca).setText(registro.característicasPlaca?.toString() ?: "")
+        findViewById<EditText>(R.id.etavifaunaEquipos).setText(registro.avifaunaEquipos ?: "")
+        findViewById<EditText>(R.id.etCrucetaSuperior).setText(registro.crucetaSuperior?.toString() ?: "")
+        findViewById<EditText>(R.id.etCrucetaInferiorTipo).setText(registro.crucetaInferiorTipo ?: "")
+        findViewById<EditText>(R.id.etbayonetaObservaciones).setText(registro.bayonetaObservaciones ?: "")
+        findViewById<EditText>(R.id.etTempleteCantidad).setText(registro.templeteCantidad?.toString() ?: "")
+        findViewById<EditText>(R.id.etTempleteAvifauna).setText(registro.templeteAvifauna?.toString() ?: "")
+        findViewById<EditText>(R.id.etAisladorA).setText(registro.aisladorA?.toString() ?: "")
+        findViewById<EditText>(R.id.etAisladorB).setText(registro.aisladorB?.toString() ?: "")
+        findViewById<EditText>(R.id.etAisladorC).setText(registro.aisladorC?.toString() ?: "")
+        findViewById<EditText>(R.id.etDpsA).setText(registro.dpsA?.toString() ?: "")
+        findViewById<EditText>(R.id.etDpsB).setText(registro.dpsB?.toString() ?: "")
+        findViewById<EditText>(R.id.etDpsC).setText(registro.dpsC?.toString() ?: "")
+        findViewById<EditText>(R.id.etequiposAdicionales).setText(registro.equiposAdicionales ?: "")
+        findViewById<EditText>(R.id.etSptBajante).setText(registro.sptBajante?.toString() ?: "")
+        findViewById<EditText>(R.id.etSptConexion).setText(registro.sptConexion?.toString() ?: "")
+        findViewById<EditText>(R.id.etSptSpt).setText(registro.sptCantidad?.toString() ?: "")
+        findViewById<EditText>(R.id.etSptEstado).setText(registro.sptEstado?.toString() ?: "")
+
+        // --- Casillas de verificación (CheckBox) ---
+        findViewById<CheckBox>(R.id.checkAvifaunaEstructura).isChecked = registro.avifaunaEstructura
+        findViewById<CheckBox>(R.id.checkSeccionador).isChecked = registro.seccionador
+
+        // --- Listas desplegables (Spinner) ---
+        // Esta lógica es un poco más compleja.
+        // Buscamos la posición del valor guardado y la seleccionamos.
+        val spinnerApoyoTipo = findViewById<Spinner>(R.id.spinnerApoyoTipo)
+        val adapterApoyo = spinnerApoyoTipo.adapter as ArrayAdapter<String>
+        spinnerApoyoTipo.setSelection(adapterApoyo.getPosition(registro.apoyoTipo))
+
+        val spinnerConfiguracion = findViewById<Spinner>(R.id.spinnerConfiguracion)
+        val adapterConfiguracion = spinnerConfiguracion.adapter as ArrayAdapter<String>
+        spinnerConfiguracion.setSelection(adapterConfiguracion.getPosition(registro.configuracion))
+
+        val spinnerDisposicion = findViewById<Spinner>(R.id.spinnerDisposicion)
+        val adapterDisposicion = spinnerDisposicion.adapter as ArrayAdapter<String>
+        spinnerDisposicion.setSelection(adapterDisposicion.getPosition(registro.disposicion))
+
+        val spinnerAisladores = findViewById<Spinner>(R.id.spinnerAisladores)
+        val adapterAisladores = spinnerAisladores.adapter as ArrayAdapter<String>
+        spinnerAisladores.setSelection(adapterAisladores.getPosition(registro.aisladorTipo))
+
+        val spinnerbayoneta = findViewById<Spinner>(R.id.spinnerbayoneta)
+        val adapterBayoneta = spinnerbayoneta.adapter as ArrayAdapter<String>
+        spinnerbayoneta.setSelection(adapterBayoneta.getPosition(registro.bayonetaTipo))
+
+        // --- Fotos ---
+        if (!registro.fotoPath.isNullOrEmpty()) {
+            multiplePhotoPaths.addAll(registro.fotoPath.split(";").filter { it.isNotBlank() })
+            renderMiniaturas()
+        }
+    }
+
+
+
 }

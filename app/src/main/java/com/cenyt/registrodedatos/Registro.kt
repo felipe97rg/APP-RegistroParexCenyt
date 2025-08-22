@@ -60,5 +60,3 @@ data class Registro(
 
     val fotoPath: String?
 )
-
-
